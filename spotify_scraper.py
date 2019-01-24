@@ -4,15 +4,21 @@
 """
 
 import os
+from spotdl import downloader
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
-import tpb
-from tpb import CATEGORIES, ORDERS
+# import tpb
+# from tpb import CATEGORIES, ORDERS
 
 USERNAME = 'austinjtaylor14'
 CLIENT_ID = 'f81e60fa2e3f4fd28c9ff883090fc2b3'
-CLIENT_SECRET = 'a58fe19450ef4d52b1ce08ac22117567'
-MP3_PATH = '/Users/austin1taylor/Music/mp3s/'
+with open('C:/Users/austi/Desktop/spotify_secret.txt', 'r') as f:
+    CLIENT_SECRET = f.read()
+
+if os.name == 'nt':
+    MP3_PATH = 'C:/Users/austi/Music/Playlists/'
+else:
+    MP3_PATH = '/Users/austin1taylor/Music/Playlists/'
 
 public_playlists = ['Electro-Boogie / Sunrise', 'Depth', 'Distant Lands', 'Noir', 'Dirty Bird', 'Too Deep',
                      'Neo Tokyo', 'After Hours']
@@ -26,20 +32,10 @@ def scrape_spotify_playlist(id):
     results = sp.user_playlist_tracks(user=USERNAME, playlist_id=id, fields='items,uri,name,id,total')
     results_items = results['items']
 
-    track_list = [(track['track']['artists'][0]['name'] + ' ' +
-                   track['track']['name']) for track in results_items]
+    track_list = [[(track['track']['artists'][0]['name'] + ' - ' +
+                   track['track']['name']), track['track']['id']] for track in results_items]
 
     return track_list
-
-
-def pirate_bay_search(search_str):
-    """
-    Function to search ThePirateBay for a string
-    """
-    tpb_conn = tpb.TPB('https://thepiratebay.org') # Create a TPB object
-    search = tpb_conn.search(search_str, category=CATEGORIES.AUDIO)
-
-    return search[0]
 
 
 def main():
@@ -55,23 +51,23 @@ def main():
         track_list = scrape_spotify_playlist(id)
         full_dict.update({name: track_list})
 
-    print(full_dict)
-
-    # Check to see if the track has an mp3. If not, search ThePirateBay, download, and copy into folder
     for name, track_list in full_dict.items():
-        curr_path = MP3_PATH + name.replace('/ ', '') + '/'
+        curr_path = MP3_PATH + name.replace('/ ', '').replace(' ', '_') + '/'
         if not os.path.isdir(curr_path):
-            os.mkdir(curr_path)
+            os.makedirs(curr_path)
 
         for track in track_list:
-            if not os.path.isfile(curr_path + track + '.mp3'):  # TODO: Use regex or fuzzywuzzy
-                pass
-                # TODO: Figure out ThePirateBay API
+            print('\n\nDownloading:', track[0], '\n')
+            string = 'spotdl --song https://open.spotify.com/track/{0} --folder {1} --manual --overwrite skip --search-format "{2}"'.format(track[1], curr_path, track[0])
+            print(string)
+            os.system(string)
 
 
 if __name__ == '__main__':
     # Spotify authorization
     client_credentials_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
     sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+
+    downloader
 
     main()
