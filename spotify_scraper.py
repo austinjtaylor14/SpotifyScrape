@@ -68,6 +68,4 @@ if __name__ == '__main__':
     client_credentials_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
     sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-    downloader
-
     main()
